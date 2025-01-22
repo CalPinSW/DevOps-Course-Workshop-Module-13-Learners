@@ -28,10 +28,11 @@ def process_orders(app):
             "customer": order.customer,
             "date": order.date_placed.isoformat(),
         }
+        app.logger.info("Request Payload:")
+        app.logger.info(payload)
 
         response = requests.post(
-            app.config["FINANCE_PACKAGE_URL"] + "/ProcessPayment",
-            json=payload
+            app.config["FINANCE_PACKAGE_URL"] + "/ProcessPayment", json=payload
         )
         app.logger.info("Response from endpoint: " + response.text)
 
@@ -40,8 +41,9 @@ def process_orders(app):
         order.set_as_processed()
         save_order(order)
 
+
 def get_queue_of_orders_to_process():
     allOrders = get_all_orders()
     queuedOrders = filter(lambda order: order.date_processed == None, allOrders)
-    sortedQueue = sorted(queuedOrders, key= lambda order: order.date_placed)
+    sortedQueue = sorted(queuedOrders, key=lambda order: order.date_placed)
     return list(sortedQueue)
