@@ -43,7 +43,7 @@ def process_orders(app):
         except:
             app.logger.exception("Error processing order {id}".format(id=order.id))
             order.set_as_failed()
-            save_order
+            save_order(order)
 
 
 def get_queue_of_orders_to_process():
