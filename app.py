@@ -1,15 +1,28 @@
-from flask import Flask, render_template, request
 from datetime import datetime, timezone
 
 from werkzeug.utils import redirect
 from flask_config import Config
-from data.database import initialise_database, add_order, clear_orders, count_orders, get_orders_to_display, get_queued_count, get_recently_placed_count, get_recently_processed_count
+from data.database import (
+    initialise_database,
+    add_order,
+    clear_orders,
+    count_orders,
+    get_orders_to_display,
+    get_queued_count,
+    get_recently_placed_count,
+    get_recently_processed_count,
+)
 from scheduled_jobs import initialise_scheduled_jobs
 from products import create_product_download
 import requests
 import logging
+from azure.monitor.opentelemetry import configure_azure_monitor
 
 logging.basicConfig(level=logging.INFO)
+configure_azure_monitor()
+
+from flask import Flask, render_template, request
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -25,21 +38,26 @@ def index():
     recently_placed_count = get_recently_placed_count()
     recently_processed_count = get_recently_processed_count()
     scenarios = [
-        { 'display': 'Add broken order', 'value': 'BrokenOrder' },
-        { 'display': 'Monitoring Load', 'value': 'HighLoad' },
-        { 'display': 'Queue Reliability', 'value': 'UnreliableProcessing' },
-        { 'display': 'System Monitoring', 'value': 'VeryHighLoad' },
-        { 'display': 'Reset to initial', 'value': 'Reset' }
+        {"display": "Add broken order", "value": "BrokenOrder"},
+        {"display": "Monitoring Load", "value": "HighLoad"},
+        {"display": "Queue Reliability", "value": "UnreliableProcessing"},
+        {"display": "System Monitoring", "value": "VeryHighLoad"},
+        {"display": "Reset to initial", "value": "Reset"},
     ]
 
     return render_template(
-        "layout.html", orders=orders, queue_count=queue_count, recently_placed_count=recently_placed_count,
-        recently_processed_count=recently_processed_count, scenarios=scenarios
+        "layout.html",
+        orders=orders,
+        queue_count=queue_count,
+        recently_placed_count=recently_placed_count,
+        recently_processed_count=recently_processed_count,
+        scenarios=scenarios,
     )
+
 
 @app.route("/count")
 def count():
-    return { 'count': count_orders() }
+    return {"count": count_orders()}
 
 
 @app.route("/new", methods=["POST"])
@@ -60,22 +78,24 @@ def new_order():
 def set_scenario():
     scenario = request.form["scenario"]
 
-    if scenario == 'BrokenOrder':
-        product = 'Product from the future'
+    if scenario == "BrokenOrder":
+        product = "Product from the future"
         download = create_product_download(product)
-        add_order('Product from the future', 'Me', '3000-01-01T12:00:00Z', None, download)
-        return redirect('/')
+        add_order(
+            "Product from the future", "Me", "3000-01-01T12:00:00Z", None, download
+        )
+        return redirect("/")
 
-    if scenario == 'Reset':
+    if scenario == "Reset":
         clear_orders()
 
     response = requests.post(
-        app.config["FINANCE_PACKAGE_URL"] + "/scenario",
-        json=scenario
+        app.config["FINANCE_PACKAGE_URL"] + "/scenario", json=scenario
     )
     response.raise_for_status()
 
-    return redirect('/')
+    return redirect("/")
+
 
 if __name__ == "__main__":
     app.run()
