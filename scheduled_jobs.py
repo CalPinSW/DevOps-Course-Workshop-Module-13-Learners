@@ -28,20 +28,20 @@ def process_orders(app):
                 "customer": order.customer,
                 "date": order.date_placed_local.isoformat(),
             }
-            # app.logger.info("Request Payload:")
-            # app.logger.info(payload)
+            app.logger.info("Request Payload:")
+            app.logger.info(payload)
 
             response = requests.post(
                 app.config["FINANCE_PACKAGE_URL"] + "/ProcessPayment", json=payload
             )
-            # app.logger.info("Response from endpoint: " + response.text)
+            app.logger.info("Response from endpoint: " + response.text)
 
             response.raise_for_status()
 
             order.set_as_processed()
             save_order(order)
         except:
-            # app.logger.exception("Error processing order {id}".format(id=order.id))
+            app.logger.exception("Error processing order {id}".format(id=order.id))
             order.set_as_failed()
             save_order(order)
 
