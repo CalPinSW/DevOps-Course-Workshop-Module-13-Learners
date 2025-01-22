@@ -61,7 +61,7 @@ def orders_to_process_filter(order: Order):
 def get_queue_of_orders_to_process():
     allOrders = get_all_orders()
     queuedOrders = filter(
-        lambda order: order.date_processed == None and order.status != "Failed",
+        orders_to_process_filter,
         allOrders,
     )
     sortedQueue = sorted(queuedOrders, key=lambda order: order.date_placed)
