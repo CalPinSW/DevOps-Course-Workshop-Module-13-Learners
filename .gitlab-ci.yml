@@ -7,7 +7,7 @@ services:
 variables:
   # REPLACE THIS, and set DOCKERHUB_TOKEN & AZURE_WEBHOOK in pipeline variables
   # Make sure that "Expand Variable" is **off** for the webhook, and that both secrets are masked
-  DOCKERHUB_USERNAME: "calpin"
+  DOCKERHUB_USERNAME: calpin
 
 deploy:
   stage: deploy
@@ -18,8 +18,6 @@ deploy:
 
   script:
     - docker build --tag ${DOCKERHUB_USERNAME}/m13-order-processing-app --target production .
-    - echo $DOCKERHUB_TOKEN != ""
-    - echo $DOCKERHUB_USERNAME
     - echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin
     - docker push ${DOCKERHUB_USERNAME}/m13-order-processing-app
     - apk add --update-cache curl
