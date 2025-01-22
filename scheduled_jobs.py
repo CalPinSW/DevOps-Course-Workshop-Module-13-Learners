@@ -1,4 +1,7 @@
+from pytz import utc
 from data.database import save_order, get_all_orders
+from data.order import Order
+from datetime import datetime, timedelta
 from products import create_product_download
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
@@ -38,12 +41,28 @@ def process_orders(app):
 
             response.raise_for_status()
 
+            app.logger.exception(
+                "Successfully processed order {id}".format(id=order.id)
+            )
+
             order.set_as_processed()
             save_order(order)
         except:
-            app.logger.exception("Error processing order {id}".format(id=order.id))
+            if order.status == "Failed":
+                app.logger.exception(
+                    "Error retrying processing order {id}".format(id=order.id)
+                )
+            else:
+                app.logger.exception("Error processing order {id}".format(id=order.id))
             order.set_as_failed()
             save_order(order)
+
+
+def orders_to_process_filter(order: Order):
+    if order.date_processed == None:
+        return True
+    if order.status == "Failed":
+        return order.date_processed > datetime.now(tz=utc) - timedelta(minutes=5)
 
 
 def get_queue_of_orders_to_process():
