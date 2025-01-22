@@ -55,7 +55,7 @@ def orders_to_process_filter(order: Order):
     if order.date_processed == None:
         return True
     if order.status == "Failed":
-        return order.date_processed > datetime.now(tz=utc) - timedelta(minutes=5)
+        return order.date_processed < datetime.now(tz=utc) - timedelta(minutes=5)
 
 
 def get_queue_of_orders_to_process():
